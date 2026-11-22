@@ -55,9 +55,15 @@ included, until the 15 minutes are up.
 
 ### 4. File storage
 
-Uploaded photos and PDFs go to **Vercel Blob**. On Vercel, add a Blob store to the
-project and `BLOB_READ_WRITE_TOKEN` is set for you. To upload while developing
-locally, copy that token into `.env.local`.
+Uploaded photos and PDFs go to **Vercel Blob**. On Vercel: **Storage → Create
+Database → Blob**, then connect it to the project, which sets
+`BLOB_READ_WRITE_TOKEN` for you. **Redeploy afterwards** — an existing build does
+not pick up a new variable. To upload while developing locally, copy that token
+into `.env.local` too.
+
+The browser sends each file straight to blob storage rather than through the
+server, so there is no request-size limit to run into. Documents may be up to
+100 MB, images 20 MB.
 
 ### 5. Run
 

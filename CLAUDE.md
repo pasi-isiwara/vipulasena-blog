@@ -18,7 +18,7 @@ See `README.md` for how to set it up and run it.
 | Next.js App Router, real routes | `/education`, `/media/recent` and so on. The prototype used hash routing with no SEO and no shareable links. |
 | Server rendering, per request | Language comes from a cookie and content from the database, so there is nothing to prerender. `cacheComponents` is off for that reason. |
 | Auth.js, username and password | Accounts live in `site_admins` with a scrypt hash. There is no sign-up form: accounts are made with `npm run admin:add`. Google sign-in was tried first and dropped at the user's request on 2026-11-22. |
-| Vercel Blob | Photos and PDFs. One package, no separate account. |
+| Vercel Blob, uploaded from the browser | Photos and PDFs. The browser sends the file straight to storage and only its URL reaches the server: a server action's request body is capped at 1 MB by Next.js and 4.5 MB by Vercel, which a scanned PDF passes easily. `app/api/upload/route.ts` issues the token and is the only place that checks who may upload. |
 | Folders, Education only | One level deep. An article may sit in a folder or straight in its section, so nothing has to be filed. The `folders` table allows any section; `SECTIONS_WITH_FOLDERS` in `lib/types.ts` decides which offer them in the admin. |
 | Cookies for language and theme | The server renders the right language and theme on the first paint — no flash, no text swapping after load. |
 
@@ -118,6 +118,13 @@ Public reads only return `published = true` articles. Every admin action calls
 account against the database on every request, so removing an account takes
 effect at once rather than when the cookie expires. `DATABASE_URL` is a server
 secret and never reaches browser code.
+
+Uploads never pass through a server action. `/api/upload` issues a short-lived
+token only to a signed-in admin, and only for a path under `articles/`,
+`documents/` or `photos/`. Every URL written to the database is checked by
+`isOurBlobUrl()` first, so a URL pointing anywhere else cannot be stored as
+though it were an uploaded file. Documents may be up to 100 MB and images 20 MB;
+anything over 5 MB is uploaded in parts.
 
 Passwords are hashed with Node's built-in scrypt (`lib/password.ts`): a random
 salt each, compared with `timingSafeEqual`, and the same work done even when no

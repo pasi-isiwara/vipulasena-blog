@@ -5,6 +5,7 @@ import type { Article, Folder, Section } from '@/lib/types';
 import { SECTIONS_WITH_FOLDERS } from '@/lib/types';
 import { saveArticle } from '@/app/admin/actions';
 import { prepareImage, ARTICLE_IMAGE_MAX } from '@/lib/resize';
+import { uploadToBlob } from '@/lib/upload-client';
 import { Drawer } from './Drawer';
 
 const SECTION_NAMES: Record<Section, string> = {
@@ -48,15 +49,27 @@ export function ArticleForm({
     try {
       const data = new FormData(form);
 
-      // Shrink the preview image here rather than sending the original
+      /* Files go from here straight to blob storage; only their URLs are sent
+         to the server action, whose request body is capped at 1 MB. */
       const image = data.get('image');
+      data.delete('image');
       if (image instanceof File && image.size > 0) {
-        setStatus({ text: 'Preparing the image…', tone: '' });
+        setStatus({ text: 'Uploading the image…', tone: '' });
         const prepared = await prepareImage(image, ARTICLE_IMAGE_MAX);
-        data.set('image', prepared.file);
-      } else {
-        data.delete('image');
+        data.set('image_url', await uploadToBlob(prepared.file, 'articles'));
       }
+
+      const doc = data.get('docfile');
+      data.delete('docfile');
+      if (doc instanceof File && doc.size > 0) {
+        if (doc.type !== 'application/pdf') {
+          throw new Error('Please choose a PDF file for the document.');
+        }
+        setStatus({ text: 'Uploading the document…', tone: '' });
+        data.set('doc_url', await uploadToBlob(doc, 'documents'));
+      }
+
+      setStatus({ text: 'Saving…', tone: '' });
 
       if (article) data.set('id', article.id);
       if (clearedImage) data.set('clear_image', '1');

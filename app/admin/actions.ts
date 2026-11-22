@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { sql } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
-import { uploadFile, deleteFile } from '@/lib/storage';
+import { deleteFile, isOurBlobUrl } from '@/lib/storage';
 import { SECTION_PATH, type Section } from '@/lib/types';
 
 /* Every action here starts with requireAdmin(), so a request that is not from a
@@ -33,6 +33,10 @@ const ArticleInput = z.object({
   id: z.string().uuid().optional(),
   section: z.enum(SECTIONS),
   folder_id: z.string().trim().max(60).default(''),
+  /* The browser uploads straight to blob storage and sends the resulting URL,
+     so no file passes through here. Empty means "leave whatever is there". */
+  image_url: z.string().trim().max(600).default(''),
+  doc_url: z.string().trim().max(600).default(''),
   title_en: z.string().trim().min(1, 'Please enter an English title.').max(160),
   desc_en: z.string().trim().max(500).default(''),
   title_si: z.string().trim().max(160).default(''),
@@ -43,6 +47,11 @@ const ArticleInput = z.object({
 
 /** https links only: a document link is opened in a new tab, so anything else
  *  (javascript:, data:) must never get through. */
+function requireOurBlob(url: string): string {
+  if (!isOurBlobUrl(url)) throw new Error('That file was not uploaded through this site.');
+  return url;
+}
+
 function safeLink(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return '';
@@ -71,6 +80,8 @@ export async function saveArticle(form: FormData): Promise<Result> {
       title_si: form.get('title_si') ?? '',
       desc_si: form.get('desc_si') ?? '',
       folder_id: form.get('folder_id') ?? '',
+      image_url: form.get('image_url') ?? '',
+      doc_url: form.get('doc_url') ?? '',
       doc_link: form.get('doc_link') ?? '',
       published: form.get('published') === 'on',
     });
@@ -85,25 +96,17 @@ export async function saveArticle(form: FormData): Promise<Result> {
       if (!owner[0] || owner[0].section !== parsed.section) folderId = null;
     }
 
-    const image = form.get('image');
-    const docFile = form.get('docfile');
     const clearImage = form.get('clear_image') === '1';
     const clearDoc = form.get('clear_doc') === '1';
 
-    let imageUrl: string | null = null;
-    if (image instanceof File && image.size > 0) {
-      imageUrl = await uploadFile(image, 'articles');
-    }
-
-    let docUrl: string | null = null;
-    if (docFile instanceof File && docFile.size > 0) {
-      if (docFile.type !== 'application/pdf') {
-        throw new Error('Please choose a PDF file for the document.');
-      }
-      docUrl = await uploadFile(docFile, 'documents');
-    } else if (parsed.doc_link) {
-      docUrl = safeLink(parsed.doc_link);
-    }
+    /* A URL only gets here after our own upload route issued the token for it,
+       so it must point at our storage. Anything else is a mistake or mischief. */
+    const imageUrl = parsed.image_url ? requireOurBlob(parsed.image_url) : null;
+    const docUrl = parsed.doc_url
+      ? requireOurBlob(parsed.doc_url)
+      : parsed.doc_link
+        ? safeLink(parsed.doc_link)
+        : null;
 
     if (parsed.id) {
       const existing = (await sql`
@@ -326,29 +329,42 @@ export async function deleteAlbum(id: string): Promise<Result> {
 
 /* ---------- Photos ---------- */
 
-export async function addPhotos(form: FormData): Promise<Result> {
+const PhotoInput = z.object({
+  album_id: z.string().trim().min(1, 'No album was chosen.').max(60),
+  photos: z
+    .array(
+      z.object({
+        url: z.string().trim().max(600),
+        ratio: z.number().positive().max(10).default(4 / 3),
+      }),
+    )
+    .min(1, 'Please choose at least one image.')
+    .max(60),
+});
+
+/** Records photos the browser has already uploaded to blob storage.
+ *  No image passes through this action: it is handed the URLs. */
+export async function addPhotos(input: unknown): Promise<Result> {
   try {
     await requireAdmin();
-    const albumId = String(form.get('album_id') ?? '');
-    if (!albumId) throw new Error('No album was chosen.');
+    const { album_id: albumId, photos } = PhotoInput.parse(input);
 
-    const files = form.getAll('photos').filter((f): f is File => f instanceof File && f.size > 0);
-    if (!files.length) throw new Error('Please choose at least one image.');
+    const exists = (await sql`select 1 from albums where id = ${albumId}`) as unknown[];
+    if (!exists.length) throw new Error('That album no longer exists.');
 
-    const ratios = form.getAll('ratios').map((r) => Number(r));
     const rows = (await sql`
       select coalesce(max(sort_order), 0) as n from photos where album_id = ${albumId}
     `) as { n: number }[];
     let order = (rows[0]?.n ?? 0) + 1;
 
-    for (const [i, file] of files.entries()) {
-      const url = await uploadFile(file, `photos/${albumId}`);
-      const ratio = Number.isFinite(ratios[i]) && ratios[i] > 0 ? ratios[i] : 4 / 3;
+    for (const photo of photos) {
+      const url = requireOurBlob(photo.url);
       await sql`
         insert into photos (album_id, image_url, ratio, sort_order)
-        values (${albumId}, ${url}, ${ratio}, ${order++})
+        values (${albumId}, ${url}, ${photo.ratio}, ${order++})
       `;
     }
+
     revalidatePath(`/media/${albumId}`);
     refreshPublicPages();
     return { ok: true };
