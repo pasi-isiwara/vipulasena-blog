@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePrefs, pick } from '@/lib/prefs';
 import type { Key } from '@/lib/i18n';
-import type { Article, Section } from '@/lib/types';
+import type { Article, Folder, Section } from '@/lib/types';
+import { FolderCard } from './FolderCard';
 import { ArticleThumb } from './ArticleThumb';
 import { useToast } from './Toast';
 import { EducationArt } from './art/EducationArt';
@@ -70,17 +71,21 @@ const COPY: Record<Section, Copy> = {
 export function TopicPage({
   section,
   articles,
+  folders = [],
 }: {
   section: Section;
+  /** Every published article in the section, those inside folders included,
+   *  so the search can reach them. */
   articles: Article[];
+  folders?: Folder[];
 }) {
   const { t, lang, countLabel } = usePrefs();
   const [query, setQuery] = useState('');
   const toast = useToast();
   const copy = COPY[section];
+  const needle = query.trim().toLowerCase();
 
-  const shown = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+  const matches = useMemo(() => {
     if (!needle) return articles;
     return articles.filter((a) => {
       const haystack = [
@@ -93,7 +98,14 @@ export function TopicPage({
         .toLowerCase();
       return haystack.includes(needle);
     });
-  }, [articles, query, lang]);
+  }, [articles, needle, lang]);
+
+  /* Folders are a way of browsing, not of filtering. While something is typed
+     in the search box they get out of the way and every match is listed flat,
+     wherever it happens to be filed. */
+  const searching = needle.length > 0;
+  const showFolders = folders.length > 0 && !searching;
+  const listed = searching ? matches : articles.filter((a) => !a.folder_id);
 
   const searchLabel = t(copy.search);
 
@@ -111,6 +123,12 @@ export function TopicPage({
           <p className="topic-lead">{t(copy.lead)}</p>
           <p className="topic-count">
             {countLabel(articles.length, copy.noun, copy.nounPlural)}
+            {folders.length > 0 && (
+              <>
+                {' · '}
+                {countLabel(folders.length, 'folderNoun', 'folderNounPlural')}
+              </>
+            )}
           </p>
         </div>
       </section>
@@ -129,8 +147,25 @@ export function TopicPage({
           </label>
         </div>
 
+        {showFolders && (
+          <>
+            <h2 className="group-head">{t('inFolders')}</h2>
+            <ol className="folder-grid">
+              {folders.map((folder, i) => (
+                <li key={folder.id}>
+                  <FolderCard folder={folder} index={i} />
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+
+        {showFolders && listed.length > 0 && (
+          <h2 className="group-head">{t('looseArticles')}</h2>
+        )}
+
         <ol className="article-list">
-          {shown.map((article) => (
+          {listed.map((article) => (
             <li key={article.id}>
               <ArticleLink
                 article={article}
@@ -143,8 +178,11 @@ export function TopicPage({
           ))}
         </ol>
 
-        {shown.length === 0 && (
+        {listed.length === 0 && !showFolders && (
           <p className="list-empty">{t(articles.length === 0 ? 'none' : 'noMatch')}</p>
+        )}
+        {listed.length === 0 && showFolders && searching && (
+          <p className="list-empty">{t('noMatch')}</p>
         )}
 
         <Link className="back-home" href="/">
@@ -158,7 +196,7 @@ export function TopicPage({
   );
 }
 
-function ArticleLink({
+export function ArticleLink({
   article,
   section,
   index,

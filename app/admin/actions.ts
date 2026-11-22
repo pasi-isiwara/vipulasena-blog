@@ -32,6 +32,7 @@ function refreshPublicPages(section?: Section) {
 const ArticleInput = z.object({
   id: z.string().uuid().optional(),
   section: z.enum(SECTIONS),
+  folder_id: z.string().trim().max(60).default(''),
   title_en: z.string().trim().min(1, 'Please enter an English title.').max(160),
   desc_en: z.string().trim().max(500).default(''),
   title_si: z.string().trim().max(160).default(''),
@@ -69,9 +70,20 @@ export async function saveArticle(form: FormData): Promise<Result> {
       desc_en: form.get('desc_en') ?? '',
       title_si: form.get('title_si') ?? '',
       desc_si: form.get('desc_si') ?? '',
+      folder_id: form.get('folder_id') ?? '',
       doc_link: form.get('doc_link') ?? '',
       published: form.get('published') === 'on',
     });
+
+    /* A folder belongs to one section, so moving an article out of that
+       section takes it out of the folder rather than leaving a stray link. */
+    let folderId: string | null = parsed.folder_id || null;
+    if (folderId) {
+      const owner = (await sql`select section from folders where id = ${folderId}`) as {
+        section: Section;
+      }[];
+      if (!owner[0] || owner[0].section !== parsed.section) folderId = null;
+    }
 
     const image = form.get('image');
     const docFile = form.get('docfile');
@@ -114,6 +126,7 @@ export async function saveArticle(form: FormData): Promise<Result> {
           section = ${parsed.section},
           title_en = ${parsed.title_en}, desc_en = ${parsed.desc_en},
           title_si = ${parsed.title_si}, desc_si = ${parsed.desc_si},
+          folder_id = ${folderId},
           image_url = ${finalImage}, doc_url = ${finalDoc},
           published = ${parsed.published},
           sort_order = coalesce(${order}, sort_order)
@@ -129,10 +142,12 @@ export async function saveArticle(form: FormData): Promise<Result> {
       const order = await nextOrder('articles', parsed.section);
       await sql`
         insert into articles
-          (section, title_en, desc_en, title_si, desc_si, image_url, doc_url, published, sort_order)
+          (section, folder_id, title_en, desc_en, title_si, desc_si,
+           image_url, doc_url, published, sort_order)
         values
-          (${parsed.section}, ${parsed.title_en}, ${parsed.desc_en}, ${parsed.title_si},
-           ${parsed.desc_si}, ${imageUrl ?? ''}, ${docUrl ?? ''}, ${parsed.published}, ${order})
+          (${parsed.section}, ${folderId}, ${parsed.title_en}, ${parsed.desc_en},
+           ${parsed.title_si}, ${parsed.desc_si}, ${imageUrl ?? ''}, ${docUrl ?? ''},
+           ${parsed.published}, ${order})
       `;
       refreshPublicPages(parsed.section);
     }
@@ -161,6 +176,88 @@ export async function deleteArticle(id: string): Promise<Result> {
   }
 }
 
+/** Turns a name into the short, readable id that goes in the address. */
+function slug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}
+
+/* ---------- Folders ---------- */
+
+const FolderInput = z.object({
+  id: z.string().trim().max(60).optional(),
+  section: z.enum(SECTIONS),
+  title_en: z.string().trim().min(1, 'Please enter an English folder name.').max(160),
+  desc_en: z.string().trim().max(500).default(''),
+  title_si: z.string().trim().max(160).default(''),
+  desc_si: z.string().trim().max(500).default(''),
+});
+
+export async function saveFolder(form: FormData): Promise<Result> {
+  try {
+    await requireAdmin();
+    const parsed = FolderInput.parse({
+      id: (form.get('id') as string) || undefined,
+      section: form.get('section') || 'education',
+      title_en: form.get('title_en') ?? '',
+      desc_en: form.get('desc_en') ?? '',
+      title_si: form.get('title_si') ?? '',
+      desc_si: form.get('desc_si') ?? '',
+    });
+
+    if (parsed.id) {
+      await sql`
+        update folders set
+          title_en = ${parsed.title_en}, desc_en = ${parsed.desc_en},
+          title_si = ${parsed.title_si}, desc_si = ${parsed.desc_si}
+        where id = ${parsed.id}
+      `;
+      revalidatePath(`/education/${parsed.id}`);
+      refreshPublicPages(parsed.section);
+      return { ok: true, id: parsed.id };
+    }
+
+    let id = slug(parsed.title_en) || 'folder';
+    const clash = (await sql`select 1 from folders where id = ${id}`) as unknown[];
+    if (clash.length) id = `${id}-${Date.now().toString(36)}`;
+
+    const rows = (await sql`
+      select coalesce(max(sort_order), 0) + 1 as n from folders where section = ${parsed.section}
+    `) as { n: number }[];
+
+    await sql`
+      insert into folders (id, section, title_en, desc_en, title_si, desc_si, sort_order)
+      values (${id}, ${parsed.section}, ${parsed.title_en}, ${parsed.desc_en},
+              ${parsed.title_si}, ${parsed.desc_si}, ${rows[0]?.n ?? 1})
+    `;
+    refreshPublicPages(parsed.section);
+    return { ok: true, id };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/** Removing a folder leaves its articles in the section: the database clears
+ *  their folder_id rather than deleting them. */
+export async function deleteFolder(id: string): Promise<Result> {
+  try {
+    await requireAdmin();
+    const rows = (await sql`
+      delete from folders where id = ${id} returning section
+    `) as { section: Section }[];
+    if (rows[0]) {
+      revalidatePath(`/education/${id}`);
+      refreshPublicPages(rows[0].section);
+    }
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
 /* ---------- Albums ---------- */
 
 const AlbumInput = z.object({
@@ -170,14 +267,6 @@ const AlbumInput = z.object({
   title_si: z.string().trim().max(160).default(''),
   desc_si: z.string().trim().max(500).default(''),
 });
-
-function slug(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
-}
 
 export async function saveAlbum(form: FormData): Promise<Result> {
   try {
@@ -305,7 +394,7 @@ export async function deletePhoto(id: string): Promise<Result> {
 
 /* ---------- Ordering ---------- */
 
-type Reorderable = 'articles' | 'albums' | 'photos';
+type Reorderable = 'articles' | 'albums' | 'photos' | 'folders';
 
 /** Swaps one row with its neighbour, the way the up and down arrows did in the
  *  prototype. Ties on sort_order are broken by created_at, so the swap uses the
@@ -331,6 +420,15 @@ export async function reorder(
     } else if (table === 'albums') {
       siblings = (await sql`
         select id, sort_order from albums order by sort_order, created_at
+      `) as { id: string; sort_order: number }[];
+    } else if (table === 'folders') {
+      const owner = (await sql`select section from folders where id = ${id}`) as {
+        section: string;
+      }[];
+      if (!owner[0]) throw new Error('That folder no longer exists.');
+      siblings = (await sql`
+        select id, sort_order from folders where section = ${owner[0].section}
+        order by sort_order, created_at
       `) as { id: string; sort_order: number }[];
     } else {
       const owner = (await sql`select album_id from photos where id = ${id}`) as {
@@ -358,6 +456,9 @@ export async function reorder(
     } else if (table === 'albums') {
       await sql`update albums set sort_order = ${orderA} where id = ${a.id}`;
       await sql`update albums set sort_order = ${a.sort_order} where id = ${b.id}`;
+    } else if (table === 'folders') {
+      await sql`update folders set sort_order = ${orderA} where id = ${a.id}`;
+      await sql`update folders set sort_order = ${a.sort_order} where id = ${b.id}`;
     } else {
       await sql`update photos set sort_order = ${orderA} where id = ${a.id}`;
       await sql`update photos set sort_order = ${a.sort_order} where id = ${b.id}`;

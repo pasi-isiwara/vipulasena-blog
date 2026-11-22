@@ -77,6 +77,15 @@ export const EN = {
   nounKids: 'book',
   nounKidsPlural: 'books',
 
+  // Folders
+  folderNoun: 'folder',
+  folderNounPlural: 'folders',
+  inFolders: 'Grouped by topic',
+  looseArticles: 'Everything else',
+  openFolder: 'Open',
+  folderEmpty: 'Nothing has been put in this folder yet.',
+  allOf: 'Back to',
+
   // Media
   mediaTitle: 'Media',
   mediaLead: 'Photos from my life today: new things I’m doing and the activities I enjoy in my free time.',
@@ -139,6 +148,7 @@ const SI: Partial<Record<Key, string>> = {
   nounEduPlural: si.nounEdu as string,
   nounGeneralPlural: si.nounGeneral as string,
   nounKidsPlural: si.nounKids as string,
+  folderNounPlural: si.folderNoun as string,
   albumsLabelPlural: si.albumsLabel as string,
   photosLabelPlural: si.photosLabel as string,
   visitor: si.visitors as string,

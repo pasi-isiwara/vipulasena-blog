@@ -4,10 +4,12 @@ import { useCallback, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import type { Album, Article, Photo, Question, Section, VisitTotals } from '@/lib/types';
+import type { Album, Article, Folder, Photo, Question, Section, VisitTotals } from '@/lib/types';
+import { SECTIONS_WITH_FOLDERS } from '@/lib/types';
 import {
   deleteArticle,
   deleteAlbum,
+  deleteFolder,
   deletePhoto,
   deleteQuestion,
   reorder,
@@ -16,10 +18,11 @@ import {
 } from '@/app/admin/actions';
 import { ConfirmButton } from './ConfirmButton';
 import { ArticleForm } from './ArticleForm';
+import { FolderForm } from './FolderForm';
 import { AlbumForm } from './AlbumForm';
 import { PhotoCaptionForm } from './PhotoCaptionForm';
 import { PhotoUploader } from './PhotoUploader';
-import { IconUp, IconDown, IconLeft, IconDoc, IconPhoto, NAV_ICONS } from './icons';
+import { IconUp, IconDown, IconLeft, IconDoc, IconPhoto, IconFolder, NAV_ICONS } from './icons';
 
 const SECTION_NAMES: Record<Section, string> = {
   education: 'Education',
@@ -51,6 +54,7 @@ function formatDate(value: string) {
 export function AdminApp({
   admin,
   articles,
+  folders,
   albums,
   photos,
   questions,
@@ -58,6 +62,7 @@ export function AdminApp({
 }: {
   admin: string;
   articles: Article[];
+  folders: Folder[];
   albums: Album[];
   photos: Photo[];
   questions: Question[];
@@ -73,6 +78,7 @@ export function AdminApp({
   // Which form the side panel is showing, if any
   const [editing, setEditing] = useState<
     | { kind: 'article'; article: Article | null; section: Section }
+    | { kind: 'folder'; folder: Folder | null; section: Section }
     | { kind: 'album'; album: Album | null }
     | { kind: 'caption'; photo: Photo }
     | null
@@ -111,7 +117,12 @@ export function AdminApp({
     window.scrollTo(0, 0);
   }
 
-  const moveButtons = (table: 'articles' | 'albums' | 'photos', id: string, i: number, n: number) => (
+  const moveButtons = (
+    table: 'articles' | 'albums' | 'photos' | 'folders',
+    id: string,
+    i: number,
+    n: number,
+  ) => (
     <>
       <button
         type="button"
@@ -137,6 +148,16 @@ export function AdminApp({
   const currentAlbum = openAlbum ? albums.find((a) => a.id === openAlbum) : null;
   const sectionArticles =
     tab === 'education' || tab === 'general' || tab === 'kids' ? articlesOf(tab) : [];
+  const sectionFolders =
+    tab === 'education' || tab === 'general' || tab === 'kids'
+      ? folders.filter((f) => f.section === tab)
+      : [];
+  const sectionHasFolders =
+    tab === 'education' || tab === 'general' || tab === 'kids'
+      ? SECTIONS_WITH_FOLDERS.includes(tab)
+      : false;
+  const folderName = (id: string | null) =>
+    id ? (folders.find((f) => f.id === id)?.title_en ?? null) : null;
   const albumPhotos = currentAlbum ? photosIn(currentAlbum.id) : [];
 
   return (
@@ -246,6 +267,15 @@ export function AdminApp({
                     actions={
                       <>
                         <Link className="btn-ghost" href={SECTION_PAGES[tab]}>See this page</Link>
+                        {sectionHasFolders && (
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            onClick={() => setEditing({ kind: 'folder', folder: null, section: tab })}
+                          >
+                            Add folder
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="btn"
@@ -256,6 +286,46 @@ export function AdminApp({
                       </>
                     }
                   />
+                  {sectionHasFolders && sectionFolders.length > 0 && (
+                    <>
+                      <h2 className="adm-h2">Folders</h2>
+                      <ol className="adm-list">
+                        {sectionFolders.map((folder, i) => (
+                          <li className="adm-row" key={folder.id}>
+                            <span className="adm-thumb">{IconFolder}</span>
+                            <span className="adm-row-main">
+                              <strong>{folder.title_en}</strong>
+                              {folder.title_si && <small lang="si">{folder.title_si}</small>}
+                              <span className="adm-tags">
+                                <span className="adm-tag">
+                                  {plural(folder.article_count, 'article', 'articles')}
+                                </span>
+                                <span className="adm-tag">/{SECTION_PAGES[tab].slice(1)}/{folder.id}</span>
+                              </span>
+                            </span>
+                            <span className="adm-row-actions">
+                              {moveButtons('folders', folder.id, i, sectionFolders.length)}
+                              <button
+                                type="button"
+                                className="btn-ghost"
+                                onClick={() => setEditing({ kind: 'folder', folder, section: tab })}
+                              >
+                                Edit
+                              </button>
+                              <ConfirmButton
+                                label="Delete"
+                                onConfirm={() =>
+                                  run(() => deleteFolder(folder.id), 'Folder deleted. Its articles are still here.')
+                                }
+                              />
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                      <h2 className="adm-h2">Articles</h2>
+                    </>
+                  )}
+
                   {sectionArticles.length === 0 ? (
                     <p className="adm-empty">No articles yet. Use “Add article” to add the first one.</p>
                   ) : (
@@ -281,6 +351,11 @@ export function AdminApp({
                                 {article.doc_url ? 'Document attached' : 'No document yet'}
                               </span>
                               {!article.title_si && <span className="adm-tag">No Sinhala title</span>}
+                              {sectionHasFolders && (
+                                <span className="adm-tag">
+                                  {folderName(article.folder_id) ?? 'Not in a folder'}
+                                </span>
+                              )}
                             </span>
                           </span>
                           <span className="adm-row-actions">
@@ -467,6 +542,20 @@ export function AdminApp({
       {editing?.kind === 'article' && (
         <ArticleForm
           article={editing.article}
+          section={editing.section}
+          folders={folders}
+          onClose={() => setEditing(null)}
+          onSaved={(message) => {
+            setEditing(null);
+            say(message, 'ok');
+            startTransition(() => router.refresh());
+          }}
+        />
+      )}
+
+      {editing?.kind === 'folder' && (
+        <FolderForm
+          folder={editing.folder}
           section={editing.section}
           onClose={() => setEditing(null)}
           onSaved={(message) => {

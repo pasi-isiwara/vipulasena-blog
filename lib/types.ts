@@ -9,9 +9,27 @@ export const SECTION_PATH: Record<Section, string> = {
   kids: 'childrens-books',
 };
 
+/** Sections whose articles can be grouped into folders. The folders table
+ *  allows any section, but only these offer folders in the admin. */
+export const SECTIONS_WITH_FOLDERS: Section[] = ['education'];
+
+export type Folder = {
+  id: string;
+  section: Section;
+  title_en: string;
+  desc_en: string;
+  title_si: string;
+  desc_si: string;
+  sort_order: number;
+  /** Published articles inside it, for the count on the folder card. */
+  article_count: number;
+};
+
 export type Article = {
   id: string;
   section: Section;
+  /** null when the article sits directly in its section rather than a folder. */
+  folder_id: string | null;
   title_en: string;
   desc_en: string;
   title_si: string;

@@ -88,5 +88,11 @@
   "generalMore": "අදහස් කියවන්න",
   "searchGeneral": "සාමාන්‍ය අදහස් තුළ සොයන්න",
   "typeGeneral": "ලිපිය",
-  "nounGeneral": "ලිපි"
+  "nounGeneral": "ලිපි",
+  "folderNoun": "ෆෝල්ඩර",
+  "inFolders": "මාතෘකාව අනුව වර්ග කර ඇත",
+  "looseArticles": "අනෙකුත් සියල්ල",
+  "openFolder": "විවෘත කරන්න",
+  "folderEmpty": "මෙම ෆෝල්ඩරයේ තවම කිසිවක් නැත.",
+  "allOf": "ආපසු"
 }

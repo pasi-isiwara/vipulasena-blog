@@ -19,6 +19,7 @@ See `README.md` for how to set it up and run it.
 | Server rendering, per request | Language comes from a cookie and content from the database, so there is nothing to prerender. `cacheComponents` is off for that reason. |
 | Auth.js, username and password | Accounts live in `site_admins` with a scrypt hash. There is no sign-up form: accounts are made with `npm run admin:add`. Google sign-in was tried first and dropped at the user's request on 2026-11-22. |
 | Vercel Blob | Photos and PDFs. One package, no separate account. |
+| Folders, Education only | One level deep. An article may sit in a folder or straight in its section, so nothing has to be filed. The `folders` table allows any section; `SECTIONS_WITH_FOLDERS` in `lib/types.ts` decides which offer them in the admin. |
 | Cookies for language and theme | The server renders the right language and theme on the first paint — no flash, no text swapping after load. |
 
 ## Pages
@@ -26,7 +27,8 @@ See `README.md` for how to set it up and run it.
 | Route | Page |
 |---|---|
 | `/` | Home: introduction, four collection cards, citation notice, "Ask a question" |
-| `/education` | Education articles |
+| `/education` | Education: its folders, then any articles not in a folder |
+| `/education/[folder]` | The articles inside one folder |
 | `/general-thoughts` | General thoughts |
 | `/childrens-books` | Children's books |
 | `/media` | Media albums |
@@ -104,7 +106,12 @@ unless given `--force`, and is kept only for diffing against the prototype.
 `admin_login_attempts` table the sign-in lockout uses.
 `database/004-general-thoughts.sql` renames the `academic` section to `general`,
 after "Academic posts" became "General thoughts" on 2026-11-22.
-`npm run db:migrate` runs all three.
+`database/005-folders.sql` adds the `folders` table and `articles.folder_id`.
+`npm run db:migrate` runs all four.
+
+`database/006-clear-samples.sql` empties articles, albums and photos. It was run
+on 2026-11-22 when the sample content was no longer wanted; admin accounts,
+questions and visits are left alone.
 
 Public reads only return `published = true` articles. Every admin action calls
 `requireAdmin()` before touching anything, and `currentAdmin()` re-checks the

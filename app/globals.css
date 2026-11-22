@@ -682,3 +682,44 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .admin-login-error{min-height:20px;margin:0;color:#b4452f;font-size:13.5px;line-height:1.45;text-align:center}
 :root[data-theme="dark"] .admin-login-error{color:#e9a08c}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .admin-login-error{color:#e9a08c}}
+
+/* ---------- Folders: grouping articles inside a section ---------- */
+/* A folder card is an article card with the drawing of a folder in place of
+   the thumbnail, so a section that mixes folders and articles still reads as
+   one list rather than two unrelated designs. */
+.group-head{margin:40px 0 18px;font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.group-head:first-child{margin-top:0}
+
+.folder-grid{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:18px}
+.folder{display:grid;grid-template-columns:116px minmax(0,1fr) auto;align-items:center;gap:20px;padding:14px 18px 14px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--body);text-decoration:none;box-shadow:0 1px 2px rgba(20,28,24,.04),0 14px 30px -26px var(--shadow);transition:translate .45s cubic-bezier(.2,.7,.2,1),box-shadow .45s ease,border-color .3s ease}
+.folder:hover{color:var(--body);translate:0 -3px;border-color:color-mix(in srgb,var(--gold) 55%,var(--line));box-shadow:0 1px 2px rgba(20,28,24,.04),0 26px 50px -32px var(--shadow)}
+.folder:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+
+.folder-thumb{display:block;width:116px;aspect-ratio:4/3;border-radius:10px;overflow:hidden}
+.folder-art{display:block;width:100%;height:100%;transition:scale .6s cubic-bezier(.2,.7,.2,1)}
+.folder:hover .folder-art{scale:1.06}
+
+/* The folder itself: a back panel with a tab, and a front flap over it */
+.fo-back{fill:var(--gold);fill-opacity:.9}
+.fo-front{fill:var(--accent)}
+.fo-sheet{fill:var(--paper);fill-opacity:.92}
+.topic--edu .fo-back{fill:var(--gold-text);fill-opacity:.55}
+.topic--edu .fo-front{fill:var(--gold-text);fill-opacity:.85}
+.topic--edu .fo-sheet{fill:var(--deep-text);fill-opacity:.35}
+
+.folder-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.folder-title{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.3;color:var(--ink)}
+.folder-meta{font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--accent)}
+.folder-desc{font-size:14.5px;line-height:1.6;color:var(--body)}
+.folder:hover .go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);translate:4px 0}
+
+@media (max-width:560px){
+  .folder{grid-template-columns:88px minmax(0,1fr)}
+  .folder .go{display:none}
+  .folder-thumb{width:88px}
+}
+@media (prefers-reduced-motion: reduce){
+  .folder,.folder-art{transition:none}
+  .folder:hover{translate:none}
+  .folder:hover .folder-art{scale:1}
+}

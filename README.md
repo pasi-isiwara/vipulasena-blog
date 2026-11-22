@@ -23,9 +23,12 @@ Create a project at [console.neon.tech](https://console.neon.tech) and copy the
 
 ```bash
 npm run db:schema    # creates the tables
-npm run db:migrate   # the later changes: question rate limit, admin login
-npm run db:seed      # optional: the sample articles and albums
+npm run db:migrate   # the later changes: rate limit, admin login, folders
 ```
+
+`npm run db:seed` adds sample articles and albums if you want something to look
+at; `node scripts/run-sql.mjs database/006-clear-samples.sql` takes them away
+again.
 
 ### 3. The admin account
 
@@ -74,6 +77,7 @@ npm run typecheck
 | `app/layout.tsx` | The page shell: fonts, language and theme, header, footer |
 | `app/page.tsx`, `app/home-content.tsx` | Home: introduction, collection cards, citation notice, question form |
 | `app/education`, `app/general-thoughts`, `app/childrens-books` | The three article pages, one `TopicPage` each |
+| `app/education/[folder]` | The articles inside one Education folder |
 | `app/media`, `app/media/[album]` | Albums, and the photos in one album with the lightbox |
 | `app/admin` | The admin area, its sign-in and its server actions |
 | `app/api/questions`, `app/api/visits` | The question form and the visitor counter |
@@ -117,8 +121,8 @@ diffing against the prototype and refuses to overwrite without `--force`.
 
 - **Sinhala review.** The translations were drafted by Claude and need a native
   speaker to check them, especially the official job titles.
-- **Real content.** The articles and albums from `seed-sample-content.sql` are
-  placeholders, to be replaced through the admin area.
+- **Real content.** The database is empty: articles, folders, albums and photos
+  are all added through the admin area.
 - **Spam protection** on the question form. It is rate-limited to five questions
   an hour per sender; adding Cloudflare Turnstile would be the next step if
   spam becomes a problem.

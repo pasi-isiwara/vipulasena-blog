@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Article, Section } from '@/lib/types';
+import type { Article, Folder, Section } from '@/lib/types';
+import { SECTIONS_WITH_FOLDERS } from '@/lib/types';
 import { saveArticle } from '@/app/admin/actions';
 import { prepareImage, ARTICLE_IMAGE_MAX } from '@/lib/resize';
 import { Drawer } from './Drawer';
@@ -15,11 +16,13 @@ const SECTION_NAMES: Record<Section, string> = {
 export function ArticleForm({
   article,
   section,
+  folders,
   onClose,
   onSaved,
 }: {
   article: Article | null;
   section: Section;
+  folders: Folder[];
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {
@@ -28,6 +31,13 @@ export function ArticleForm({
   const [preview, setPreview] = useState<string>(article?.image_url ?? '');
   const [clearedImage, setClearedImage] = useState(false);
   const [clearedDoc, setClearedDoc] = useState(false);
+
+  // The folder list follows the section chosen in this form, not the tab
+  // the article was opened from.
+  const [chosenSection, setChosenSection] = useState<Section>(article?.section ?? section);
+  const foldersHere = SECTIONS_WITH_FOLDERS.includes(chosenSection)
+    ? folders.filter((f) => f.section === chosenSection)
+    : [];
 
   const existingDoc = !clearedDoc ? (article?.doc_url ?? '') : '';
   const existingDocIsLink = existingDoc && !existingDoc.includes('.blob.vercel-storage.com');
@@ -75,7 +85,11 @@ export function ArticleForm({
     >
       <label className="field">
         <span>Section</span>
-        <select name="section" defaultValue={article?.section ?? section}>
+        <select
+          name="section"
+          value={chosenSection}
+          onChange={(e) => setChosenSection(e.target.value as Section)}
+        >
           {(Object.keys(SECTION_NAMES) as Section[]).map((key) => (
             <option key={key} value={key}>
               {SECTION_NAMES[key]}
@@ -83,6 +97,24 @@ export function ArticleForm({
           ))}
         </select>
       </label>
+
+      {foldersHere.length > 0 && (
+        <label className="field">
+          <span>Folder</span>
+          <select
+            name="folder_id"
+            defaultValue={article?.folder_id ?? ''}
+            key={chosenSection}
+          >
+            <option value="">No folder, show it in the section itself</option>
+            {foldersHere.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.title_en}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <fieldset className="adm-lang">
         <legend>English</legend>

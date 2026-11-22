@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { currentAdmin } from '@/lib/auth';
 import {
   adminListArticles,
+  adminListFolders,
   adminListPhotos,
   listAlbums,
   listQuestions,
@@ -35,8 +36,9 @@ export default async function AdminPage() {
     );
   }
 
-  const [articles, albums, photos, questions, totals] = await Promise.all([
+  const [articles, folders, albums, photos, questions, totals] = await Promise.all([
     adminListArticles(),
+    adminListFolders(),
     listAlbums(),
     adminListPhotos(),
     listQuestions(),
@@ -47,6 +49,7 @@ export default async function AdminPage() {
     <AdminApp
       admin={admin.name}
       articles={articles}
+      folders={folders}
       albums={albums}
       photos={photos}
       questions={questions}

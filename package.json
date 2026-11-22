@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:schema": "node scripts/run-sql.mjs database/neon-schema.sql",
     "db:seed": "node scripts/run-sql.mjs database/seed-sample-content.sql",
-    "db:migrate": "node scripts/run-sql.mjs database/002-sender-hash.sql && node scripts/run-sql.mjs database/003-admin-login.sql && node scripts/run-sql.mjs database/004-general-thoughts.sql",
+    "db:migrate": "node scripts/run-sql.mjs database/002-sender-hash.sql && node scripts/run-sql.mjs database/003-admin-login.sql && node scripts/run-sql.mjs database/004-general-thoughts.sql && node scripts/run-sql.mjs database/005-folders.sql",
     "admin:add": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/add-admin.mjs",
     "admin:list": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/add-admin.mjs --list",
     "admin:remove": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/add-admin.mjs --remove"
