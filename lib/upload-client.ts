@@ -27,25 +27,25 @@ export async function uploadToBlob(
     });
     return result.url;
   } catch (error) {
-    // The message from Blob is often a bare "Failed to fetch"; say something useful.
     const detail = error instanceof Error ? error.message : '';
-    if (/token|unauthor|signed in/i.test(detail)) {
+
+    /* Only the messages this site writes itself are reworded. Anything from
+       Blob is passed through as it came: guessing at what a message means
+       turns a storage problem into "your session has expired", which sends
+       whoever hit it to sign in over and over while the real cause sits
+       untouched. */
+    if (detail.includes('not signed in as an admin')) {
       throw new Error('Your session has expired. Please sign in again.');
     }
-    if (/exceed|size|large/i.test(detail)) {
+    if (detail.includes('upload location is not allowed')) {
+      throw new Error('That file could not be uploaded to this part of the site.');
+    }
+
+    if (!detail) {
       throw new Error(
-        folder === 'documents'
-          ? 'That document is too large. Documents can be up to 100 MB.'
-          : 'That image is too large. Images can be up to 20 MB.',
+        'The file could not be uploaded. Please check your connection and try again.',
       );
     }
-    if (/content.?type|not allowed/i.test(detail)) {
-      throw new Error('That type of file can’t be uploaded.');
-    }
-    throw new Error(
-      detail
-        ? `The file could not be uploaded: ${detail}`
-        : 'The file could not be uploaded. Please check your connection and try again.',
-    );
+    throw new Error(`The file could not be uploaded. ${detail}`);
   }
 }
