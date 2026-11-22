@@ -1,5 +1,5 @@
-/* Academic posts header: a journal, a quill that writes, a bar chart. */
-export function AcademicArt() {
+/* General thoughts header: a journal, a quill that writes, a bar chart. */
+export function GeneralArt() {
   return (
           <div className="topic-art" aria-hidden="true">
             <svg viewBox="0 0 520 360" fill="none" strokeLinecap="round" strokeLinejoin="round">

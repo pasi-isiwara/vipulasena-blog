@@ -1,8 +1,9 @@
 'use client';
 
 /* The home page: introduction, the four collection cards, the citation notice
-   and the question form. Generated from the prototype by scripts/build-home.mjs
-   so the markup and artwork stay identical - edit that script, not this file. */
+   and the question form. First generated from the prototype by
+   scripts/build-home.mjs so the markup and artwork came across unchanged;
+   an ordinary source file from then on - edit it directly. */
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,12 +36,12 @@ export function HomeContent() {
               <div className="intro">
                 <h1 className="rise d1">{t('name')}</h1>
                 <span className="rule" aria-hidden="true"></span>
-                <p className="role rise d2" dangerouslySetInnerHTML={{ __html: t('role') }} />
-                <ul className="quals rise d3" aria-label={t('ariaQuals')}>
+                <ul className="quals rise d2" aria-label={t('ariaQuals')}>
                   <li>BSc</li>
                   <li>PGDE</li>
                   <li>MA</li>
                 </ul>
+                <p className="role rise d3" dangerouslySetInnerHTML={{ __html: t('role') }} />
               </div>
 
               <p className="bio-lead rise d4">{t('bio1')}</p>
@@ -106,7 +107,7 @@ export function HomeContent() {
               </span>
             </Link>
 
-            <Link className="card card--sand" href="/academic-posts">
+            <Link className="card card--sand" href="/general-thoughts">
               <svg className="card-art" viewBox="0 0 200 200" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect className="ln" x="60" y="42" width="96" height="124" rx="6" transform="rotate(8 108 104)" />
                 <rect className="ln" x="48" y="34" width="96" height="124" rx="6" />
@@ -118,14 +119,14 @@ export function HomeContent() {
               <span className="icon" aria-hidden="true">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M9 13h6" /><path d="M9 17h4" /></svg>
               </span>
-              <h3>{t('navAcad')}</h3>
-              <p>{t('acadDesc')}</p>
+              <h3>{t('navGeneral')}</h3>
+              <p>{t('generalDesc')}</p>
               <ul className="chips">
-                <li>{t('chipResearch')}</li>
+                <li>{t('chipReflections')}</li>
                 <li>{t('chipCommentary')}</li>
               </ul>
               <span className="card-foot">
-                <span className="more">{t('acadMore')}</span>
+                <span className="more">{t('generalMore')}</span>
                 <span className="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
               </span>
             </Link>

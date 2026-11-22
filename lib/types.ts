@@ -1,11 +1,11 @@
-export type Section = 'education' | 'academic' | 'kids';
+export type Section = 'education' | 'general' | 'kids';
 
-export const SECTIONS: Section[] = ['education', 'academic', 'kids'];
+export const SECTIONS: Section[] = ['education', 'general', 'kids'];
 
 /** The route segment each section lives at. */
 export const SECTION_PATH: Record<Section, string> = {
   education: 'education',
-  academic: 'academic-posts',
+  general: 'general-thoughts',
   kids: 'childrens-books',
 };
 

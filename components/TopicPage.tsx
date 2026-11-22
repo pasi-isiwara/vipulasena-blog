@@ -8,7 +8,7 @@ import type { Article, Section } from '@/lib/types';
 import { ArticleThumb } from './ArticleThumb';
 import { useToast } from './Toast';
 import { EducationArt } from './art/EducationArt';
-import { AcademicArt } from './art/AcademicArt';
+import { GeneralArt } from './art/GeneralArt';
 import { KidsArt } from './art/KidsArt';
 
 const ARROW = (
@@ -45,15 +45,15 @@ const COPY: Record<Section, Copy> = {
     noun: 'nounEdu',
     nounPlural: 'nounEduPlural',
   },
-  academic: {
+  general: {
     className: 'topic--acad',
-    art: <AcademicArt />,
-    title: 'navAcad',
-    lead: 'acadDesc',
-    search: 'searchAcad',
-    type: 'typeAcad',
-    noun: 'nounAcad',
-    nounPlural: 'nounAcadPlural',
+    art: <GeneralArt />,
+    title: 'navGeneral',
+    lead: 'generalDesc',
+    search: 'searchGeneral',
+    type: 'typeGeneral',
+    noun: 'nounGeneral',
+    nounPlural: 'nounGeneralPlural',
   },
   kids: {
     className: 'topic--kids',

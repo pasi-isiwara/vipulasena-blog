@@ -8,7 +8,7 @@ import { Drawer } from './Drawer';
 
 const SECTION_NAMES: Record<Section, string> = {
   education: 'Education',
-  academic: 'Academic posts',
+  general: 'General thoughts',
   kids: 'Children’s books',
 };
 

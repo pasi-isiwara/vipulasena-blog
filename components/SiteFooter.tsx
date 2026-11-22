@@ -7,7 +7,7 @@ import { CountUp } from './CountUp';
 
 const NAV = [
   { href: '/education', key: 'navEdu' },
-  { href: '/academic-posts', key: 'navAcad' },
+  { href: '/general-thoughts', key: 'navGeneral' },
   { href: '/childrens-books', key: 'navKids' },
   { href: '/media', key: 'navMedia' },
   { href: '/#ask', key: 'navAsk' },

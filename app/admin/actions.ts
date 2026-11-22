@@ -17,7 +17,7 @@ function fail(error: unknown): Result {
   return { ok: false, error: message };
 }
 
-const SECTIONS = ['education', 'academic', 'kids'] as const;
+const SECTIONS = ['education', 'general', 'kids'] as const;
 
 function refreshPublicPages(section?: Section) {
   revalidatePath('/');

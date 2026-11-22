@@ -1,8 +1,24 @@
 /* Generates app/home-content.tsx from the prototype's home markup.
    Elements carrying data-i18n get their text from the dictionary instead;
-   everything else - the hand-drawn SVG especially - comes across unchanged. */
-import { writeFileSync } from 'node:fs';
+   everything else - the hand-drawn SVG especially - comes across unchanged.
+
+   This ran once, to carry the prototype across without retyping its artwork.
+   app/home-content.tsx is now an ordinary source file that has been edited
+   since, so running this again would throw that work away: it refuses unless
+   you pass --force, and the point of keeping it is to diff against the
+   prototype, not to regenerate the page. */
+import { writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+
+const OUT = 'app/home-content.tsx';
+
+if (existsSync(OUT) && !process.argv.includes('--force')) {
+  console.error(
+    `${OUT} already exists and has been edited by hand since it was generated.\n` +
+      'Edit it directly. To regenerate from the prototype anyway, pass --force.',
+  );
+  process.exit(1);
+}
 
 const FROM = 81;
 const TO = 352;
@@ -37,7 +53,7 @@ jsx = jsx.replace(/alt="[^"]*"\s+data-i18n-alt="(\w+)"/g, (_m, k) => `alt={t('al
 const ROUTES = {
   '#top': '/',
   '#education': '/education',
-  '#academic-posts': '/academic-posts',
+  '#academic-posts': '/general-thoughts',
   '#childrens-books': '/childrens-books',
   '#media': '/media',
 };
@@ -111,8 +127,9 @@ const body = jsx
 const file = `'use client';
 
 /* The home page: introduction, the four collection cards, the citation notice
-   and the question form. Generated from the prototype by scripts/build-home.mjs
-   so the markup and artwork stay identical - edit that script, not this file. */
+   and the question form. First generated from the prototype by
+   scripts/build-home.mjs so the markup and artwork came across unchanged;
+   an ordinary source file from then on. */
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -132,5 +149,5 @@ ${body}
 }
 `;
 
-writeFileSync('app/home-content.tsx', file);
-console.log('app/home-content.tsx written,', file.split('\n').length, 'lines');
+writeFileSync(OUT, file);
+console.log(`${OUT} written,`, file.split('\n').length, 'lines');

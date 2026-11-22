@@ -23,12 +23,12 @@ import { IconUp, IconDown, IconLeft, IconDoc, IconPhoto, NAV_ICONS } from './ico
 
 const SECTION_NAMES: Record<Section, string> = {
   education: 'Education',
-  academic: 'Academic posts',
+  general: 'General thoughts',
   kids: 'Children’s books',
 };
 const SECTION_PAGES: Record<Section, string> = {
   education: '/education',
-  academic: '/academic-posts',
+  general: '/general-thoughts',
   kids: '/childrens-books',
 };
 
@@ -136,7 +136,7 @@ export function AdminApp({
 
   const currentAlbum = openAlbum ? albums.find((a) => a.id === openAlbum) : null;
   const sectionArticles =
-    tab === 'education' || tab === 'academic' || tab === 'kids' ? articlesOf(tab) : [];
+    tab === 'education' || tab === 'general' || tab === 'kids' ? articlesOf(tab) : [];
   const albumPhotos = currentAlbum ? photosIn(currentAlbum.id) : [];
 
   return (
@@ -153,7 +153,7 @@ export function AdminApp({
           <nav className="admin-nav" aria-label="Admin sections">
             <NavButton tab="overview" current={tab} onClick={go} icon={NAV_ICONS.overview} label="Overview" />
             <NavButton tab="education" current={tab} onClick={go} icon={NAV_ICONS.education} label="Education" />
-            <NavButton tab="academic" current={tab} onClick={go} icon={NAV_ICONS.academic} label="Academic posts" />
+            <NavButton tab="general" current={tab} onClick={go} icon={NAV_ICONS.general} label="General thoughts" />
             <NavButton tab="kids" current={tab} onClick={go} icon={NAV_ICONS.kids} label="Children’s books" />
             <NavButton tab="media" current={tab} onClick={go} icon={NAV_ICONS.media} label="Media" />
             <NavButton
@@ -238,7 +238,7 @@ export function AdminApp({
             </>
           )}
 
-          {(tab === 'education' || tab === 'academic' || tab === 'kids') && (
+          {(tab === 'education' || tab === 'general' || tab === 'kids') && (
             <>
               <Head
                 title={SECTION_NAMES[tab]}

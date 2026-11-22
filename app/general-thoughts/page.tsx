@@ -6,10 +6,10 @@ import { t } from '@/lib/i18n';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { lang } = await readPrefs();
-  return { title: `${t(lang, 'navAcad')} | ${t(lang, 'site')}` };
+  return { title: `${t(lang, 'navGeneral')} | ${t(lang, 'site')}` };
 }
 
 export default async function Page() {
-  const articles = await listArticles('academic');
-  return <TopicPage section="academic" articles={articles} />;
+  const articles = await listArticles('general');
+  return <TopicPage section="general" articles={articles} />;
 }

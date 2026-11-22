@@ -73,7 +73,7 @@ npm run typecheck
 |---|---|
 | `app/layout.tsx` | The page shell: fonts, language and theme, header, footer |
 | `app/page.tsx`, `app/home-content.tsx` | Home: introduction, collection cards, citation notice, question form |
-| `app/education`, `app/academic-posts`, `app/childrens-books` | The three article pages, one `TopicPage` each |
+| `app/education`, `app/general-thoughts`, `app/childrens-books` | The three article pages, one `TopicPage` each |
 | `app/media`, `app/media/[album]` | Albums, and the photos in one album with the lightbox |
 | `app/admin` | The admin area, its sign-in and its server actions |
 | `app/api/questions`, `app/api/visits` | The question form and the visitor counter |
@@ -97,17 +97,19 @@ Pages are rendered per request: the language comes from a cookie and the content
 from the database, so there is nothing to prerender. Admin changes call
 `revalidatePath`, so the public pages update as soon as something is saved.
 
-### Generated files
+### Carried over from the prototype
 
-Two files are generated rather than written by hand, so the prototype's artwork
-and the already-drafted Sinhala are carried over exactly:
+`lib/i18n-si.json` holds the Sinhala and is generated, so the drafted wording is
+never retyped. Edit the script, not the file:
 
 ```bash
-node scripts/extract-i18n.mjs   # lib/i18n-si.json, from the prototype's dictionaries
-node scripts/build-home.mjs     # app/home-content.tsx, from the prototype's home markup
+node scripts/extract-i18n.mjs
 ```
 
-Both read from `reference/`. Edit the script, not the generated file.
+`app/home-content.tsx` and `components/art/*.tsx` were generated once from the
+prototype's markup so the hand-drawn SVG came across unchanged. They are normal
+source files now — edit them directly. `scripts/build-home.mjs` is kept for
+diffing against the prototype and refuses to overwrite without `--force`.
 
 ---
 

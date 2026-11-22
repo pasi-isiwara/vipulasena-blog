@@ -13,7 +13,7 @@ const MOTIFS: Record<Section, string[]> = {
     'M5 19c0-9 6-14 15-14 0 9-5 15-14 15zM5 19l9-9',
     'M5 3h4v8a3 3 0 0 0 6 0V3h4v8a7 7 0 0 1-14 0zM5 7h4M15 7h4',
   ],
-  academic: [
+  general: [
     'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
     'M4 20h16M7 20v-6M11 20V9M15 20v-9M19 20V5',
     '',
@@ -47,7 +47,7 @@ function Motif({ section, index }: { section: Section; index: number }) {
       </>
     );
   }
-  if (section === 'academic') {
+  if (section === 'general') {
     return (
       <>
         <circle cx="10.5" cy="10.5" r="6" />
@@ -72,7 +72,7 @@ function Deco({ section }: { section: Section }) {
       </>
     );
   }
-  if (section === 'academic') {
+  if (section === 'general') {
     return (
       <>
         <path className="th-rule" d="M0 18h120M0 30h120M0 42h120M0 54h120M0 66h120M0 78h120" />

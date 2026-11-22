@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t(lang, 'titleHome'),
     description:
-      'The blog of Vipulasena Pathirajage, former Director of Science Education, Ministry of Education, Sri Lanka. Publications, academic posts, children’s books and media, free to use with citation.',
+      'The blog of Vipulasena Pathirajage, former Director of Science Education, Ministry of Education, Sri Lanka. Publications, general thoughts, children’s books and media, free to use with citation.',
   };
 }
 

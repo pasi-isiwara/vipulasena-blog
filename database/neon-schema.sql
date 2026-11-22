@@ -3,10 +3,10 @@
 -- Photos, preview images and PDFs are kept in file storage;
 -- these tables store their web addresses (image_url, doc_url).
 
--- Articles for Education, Academic posts and Children's books
+-- Articles for Education, General thoughts and Children's books
 create table if not exists articles (
   id          uuid primary key default gen_random_uuid(),
-  section     text not null check (section in ('education', 'academic', 'kids')),
+  section     text not null check (section in ('education', 'general', 'kids')),
   title_en    text not null,
   desc_en     text not null default '',
   title_si    text not null default '',

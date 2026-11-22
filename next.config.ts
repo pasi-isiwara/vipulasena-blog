@@ -7,6 +7,22 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '*.public.blob.vercel-storage.com' }],
   },
+
+  async redirects() {
+    return [
+      /* "Academic posts" became "General thoughts" on 2026-11-22. Kept so an
+         old link or bookmark still lands on the right page.
+
+         permanent is false on purpose: a 308 is cached hard by browsers and
+         would be awkward to undo. Worth turning to true once the name has
+         settled and the site is public. */
+      {
+        source: '/academic-posts',
+        destination: '/general-thoughts',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

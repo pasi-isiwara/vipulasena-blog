@@ -7,7 +7,7 @@ import { usePrefs } from '@/lib/prefs';
 const NAV = [
   { href: '/', key: 'navHome' },
   { href: '/education', key: 'navEdu' },
-  { href: '/academic-posts', key: 'navAcad' },
+  { href: '/general-thoughts', key: 'navGeneral' },
   { href: '/childrens-books', key: 'navKids' },
   { href: '/media', key: 'navMedia' },
   { href: '/#ask', key: 'navAsk' },
